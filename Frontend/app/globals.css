@@ -1,0 +1,22 @@
+:root {
+  --paper: hsl(84, 14%, 93%);
+  --surface: hsl(50, 27%, 96%);
+  --surface-sunken: hsl(75, 14%, 89%);
+  --text: hsl(193, 26%, 14%);
+  --text-muted: hsl(192, 7%, 29%);
+  --accent: hsl(36, 51%, 48%);
+  --gains: hsl(143, 28%, 33%);
+  --losses: hsl(7, 45%, 44%);
+  --border: hsl(47, 19%, 82%);
+  --border-strong: hsl(47, 19%, 70%);
+}
+
+html {
+  box-sizing: border-box;
+  margin: 0px;
+}
+*, *::before, *::after { box-sizing: inherit; }
+
+body {
+  margin: 0px;
+}
