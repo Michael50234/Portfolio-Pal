@@ -1,7 +1,15 @@
+'use client';
+
 import { Box, Button, TextField, Typography } from '@mui/material';
+import Link from 'next/link';
 import React from 'react'
 
 const page = () => {
+
+  const login = () => {
+
+  };
+
   return (
     <Box sx={{
       minHeight: "100vh",
@@ -53,9 +61,17 @@ const page = () => {
         <TextField label="Password" sx={{ width: "70%"}} />
         <Button fullWidth variant="contained" sx={{ backgroundColor: "var(--accent)", width: "70%" }}>Continue</Button>
         <Typography sx={{
-          color: "var(--text-muted)"
+          color: "var(--text-muted)",
+          textDecoration: "underline",
+          textDecorationColor: "transparent",
+          transition: "text-decoration-color 0.1s ease-in",
+          "&:hover": {
+            textDecorationColor: "rgba(0, 0, 0, 0.9)"
+          }
         }}>
-          Already have an account? Login instead.
+          <Link href="/sign-up">
+            Don't have an account. Create one here.
+          </Link>
         </Typography>
       </Box>
     </Box>
