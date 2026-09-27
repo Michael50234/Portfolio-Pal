@@ -20,3 +20,8 @@ html {
 body {
   margin: 0px;
 }
+
+a {
+  color: var(--text-muted);
+  text-decoration-color: transparent;
+}
