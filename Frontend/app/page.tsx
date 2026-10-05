@@ -2,13 +2,46 @@
 
 import { Box, Button, TextField, Typography } from '@mui/material';
 import Link from 'next/link';
-import React from 'react'
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react'
 
 const page = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const login = () => {
+  const router = useRouter();
 
+
+  const login = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/login`, {
+        method: "POST",
+        headers: {
+          'Content-Type': "application/json"
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password
+        }),
+        credentials: "include"
+      });
+
+      if(!response.ok) {
+        const errorObject: ApiError = await response.json();
+        throw new Error(errorObject.message)
+      }
+
+      console.log("Logged in")
+      router.replace("/home")
+    } catch(error) {
+      if(error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("Login Failed");
+      }
+    }
   };
+
 
   return (
     <Box sx={{
@@ -55,11 +88,22 @@ const page = () => {
             fontSize: "1.3rem",
           }}
         >
-          Sign up and start tracking now
+          Login
         </Typography>
-        <TextField label="Username" sx={{ width: "70%"}}/>
-        <TextField label="Password" sx={{ width: "70%"}} />
-        <Button fullWidth variant="contained" sx={{ backgroundColor: "var(--accent)", width: "70%" }}>Continue</Button>
+        <TextField 
+          label="Username" 
+          value={username} 
+          onChange={(e) => setUsername(e.target.value)} 
+          sx={{ width: "70%"}}
+        />
+        <TextField 
+          label="Password" 
+          type="password" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          sx={{ width: "70%"}} 
+        />
+        <Button fullWidth variant="contained" onClick={() => login()} sx={{ backgroundColor: "var(--accent)", width: "70%" }}>Continue</Button>
         <Typography sx={{
           color: "var(--text-muted)",
           textDecoration: "underline",
@@ -69,7 +113,7 @@ const page = () => {
             textDecorationColor: "rgba(0, 0, 0, 0.9)"
           }
         }}>
-          <Link href="/sign-up">
+          <Link href="/signup">
             Don't have an account. Create one here.
           </Link>
         </Typography>

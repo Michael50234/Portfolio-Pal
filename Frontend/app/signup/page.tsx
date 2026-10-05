@@ -1,11 +1,44 @@
+'use client';
+
 import { Box, Button, TextField, Typography } from '@mui/material';
 import Link from 'next/link';
-import React from 'react'
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react'
 
 const page = () => {
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
-  const signup = () => {
+  const router = useRouter();
 
+  const signup = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/signup`, {
+        method: "POST",
+        headers: {
+          'Content-Type': "application/json"
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password
+        }),
+        credentials: "include"
+      });
+
+      if(!response.ok) {
+        const errorObject: ApiError = await response.json();
+        throw new Error(errorObject.message)
+      }
+
+      console.log("Created an account")
+      router.replace("/home")
+    } catch(error) {
+      if(error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("Signup Failed");
+      }
+    }
   };
 
   return (
@@ -55,9 +88,24 @@ const page = () => {
         >
           Sign up and start tracking now
         </Typography>
-        <TextField label="Username" sx={{ width: "70%"}}/>
-        <TextField label="Password" sx={{ width: "70%"}} />
-        <Button fullWidth variant="contained" sx={{ backgroundColor: "var(--accent)", width: "70%" }}>Continue</Button>
+        <TextField 
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value)
+          }}
+          label="Username" 
+          sx={{ width: "70%"}}
+        />
+        <TextField
+          value={password}
+          type="password"
+          onChange={(e) => {
+            setPassword(e.target.value)
+          }}
+          label="Password" 
+          sx={{ width: "70%"}} 
+        />
+        <Button fullWidth variant="contained" sx={{ backgroundColor: "var(--accent)", width: "70%" }} onClick={() => signup()}>Continue</Button>
         <Typography sx={{
           color: "var(--text-muted)",
           textDecoration: "underline",

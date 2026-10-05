@@ -1,0 +1,3 @@
+type ApiError = {
+    message: string
+}

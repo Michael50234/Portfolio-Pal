@@ -9,7 +9,7 @@ import { verifyJWT } from "../middleware";
 
 const userRouter = express.Router();
 
-userRouter.get('/login', async (req, res) => {
+userRouter.post('/login', async (req, res) => {
     const parsed = loginSchema.safeParse({
         username: req.body.username,
         password: req.body.password
@@ -56,7 +56,7 @@ userRouter.get('/login', async (req, res) => {
     return res.sendStatus(204);
 })
 
-userRouter.post('/sign-up', async (req, res) => {
+userRouter.post('/signup', async (req, res) => {
     const parsed = registerSchema.safeParse({
         username: req.body.username,
         password: req.body.password
@@ -70,7 +70,6 @@ userRouter.post('/sign-up', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        // Check if username taken
         const existingUser = await prisma.user.findUnique({
             where: {
                 username: username
@@ -80,7 +79,6 @@ userRouter.post('/sign-up', async (req, res) => {
         if(existingUser) {
             return sendError(409,  "Username already taken", res)
         }
-
         const user = await prisma.user.create({
             data: {
                 username: username,
