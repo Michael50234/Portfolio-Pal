@@ -18,4 +18,48 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  trades Trade[]
+  watchListItems  WatchListItem[]
+  snapshots Snapshot[]
+}
+
+enum TradeType {
+  BUY
+  SELL
+}
+
+model Trade {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tradeType TradeType
+  price  Decimal @db.Decimal(14, 4)
+  shares Decimal @db.Decimal(18, 6)
+  ticker String
+  // This is the date where the user made the transaction
+  date DateTime @db.Date
+  // This is the time the user created the record
+  // When displaying trades, sort by createdAt to display trades on the same day in order
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+model WatchListItem {
+  userId  String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker String 
+  createdAt DateTime @default(now())
+
+  @@id([userId, ticker])
+}
+
+model Snapshot {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  totalValue Decimal  @db.Decimal(14, 2)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, date])
 }
