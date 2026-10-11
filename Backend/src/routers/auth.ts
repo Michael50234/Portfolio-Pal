@@ -1,8 +1,7 @@
-import bcrypt from "bcrypt";
 import express from "express";
 
 import { prisma } from "../prismaClient";
-import { createJWT } from "../utilities/auth";
+import { checkPassword, createJWT, hashPassword } from "../utilities/auth";
 import sendError from "../utilities/error";
 import { loginSchema, registerSchema } from "../validation/authSchemas";
 import { verifyJWT } from "../middleware";
@@ -37,7 +36,7 @@ authRouter.post('/login', async (req, res) => {
         return sendError(500, "Internal server error", res)
     }
 
-    const isValid = await bcrypt.compare(password, user.password)
+    const isValid = await checkPassword(password, user.password)
 
     if(!isValid) {
         return sendError(401, "Username or password incorrect", res)
@@ -67,7 +66,7 @@ authRouter.post('/signup', async (req, res) => {
     }
 
     const { username, password } = parsed.data;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     try {
         const existingUser = await prisma.user.findUnique({
@@ -101,7 +100,5 @@ authRouter.post('/signup', async (req, res) => {
         return sendError(500,  "Internal server error", res)
     }  
 })
-
-authRouter.use(verifyJWT);
 
 export default authRouter;
