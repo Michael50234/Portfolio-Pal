@@ -8,6 +8,7 @@ import { verifyJWT } from "./middleware";
 import { stocksRouter } from "./routers/stocks";
 import { tradesRouter } from "./routers/trades";
 import { userRouter } from "./routers/user";
+import { watchListRouter } from "./routers/watchList";
 
 const app = express();
 
@@ -25,7 +26,7 @@ app.use(verifyJWT);
 app.use("/stocks", stocksRouter);
 app.use("/trades", tradesRouter);
 app.use("/user", userRouter);
-app.use("/watchList")
+app.use("/watchList", watchListRouter)
 
 
 app.listen(process.env.PORT);

@@ -11,10 +11,9 @@ const page = () => {
 
   const router = useRouter();
 
-
   const login = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, {
         method: "POST",
         headers: {
           'Content-Type': "application/json"
