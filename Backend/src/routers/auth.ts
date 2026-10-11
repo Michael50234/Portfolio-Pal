@@ -1,15 +1,15 @@
 import bcrypt from "bcrypt";
 import express from "express";
-import { prisma } from "../prismaClient";
 
+import { prisma } from "../prismaClient";
 import { createJWT } from "../utilities/auth";
 import sendError from "../utilities/error";
-import { loginSchema, registerSchema } from "../vaidation/usersSchemas";
+import { loginSchema, registerSchema } from "../validation/authSchemas";
 import { verifyJWT } from "../middleware";
 
-const userRouter = express.Router();
+const authRouter = express.Router();
 
-userRouter.post('/login', async (req, res) => {
+authRouter.post('/login', async (req, res) => {
     const parsed = loginSchema.safeParse({
         username: req.body.username,
         password: req.body.password
@@ -56,7 +56,7 @@ userRouter.post('/login', async (req, res) => {
     return res.sendStatus(204);
 })
 
-userRouter.post('/signup', async (req, res) => {
+authRouter.post('/signup', async (req, res) => {
     const parsed = registerSchema.safeParse({
         username: req.body.username,
         password: req.body.password
@@ -102,6 +102,6 @@ userRouter.post('/signup', async (req, res) => {
     }  
 })
 
-userRouter.use(verifyJWT);
+authRouter.use(verifyJWT);
 
-export default userRouter;
+export default authRouter;

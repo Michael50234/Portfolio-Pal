@@ -28,6 +28,7 @@ enum TradeType {
   SELL
 }
 
+// A record for a purchase/sale of a stock
 model Trade {
   id String @id @default(uuid())
   userId String
@@ -45,6 +46,7 @@ model Trade {
   @@index([userId, date])
 }
 
+// A stock being watched by a user
 model WatchListItem {
   userId  String
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -54,6 +56,7 @@ model WatchListItem {
   @@id([userId, ticker])
 }
 
+// A record of the users portfolio net worth at the end of each day
 model Snapshot {
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
