@@ -4,7 +4,6 @@ import { prisma } from "../prismaClient";
 import { checkPassword, createJWT, hashPassword } from "../utilities/auth";
 import sendError from "../utilities/error";
 import { loginSchema, registerSchema } from "../validation/authSchemas";
-import { verifyJWT } from "../middleware";
 
 const authRouter = express.Router();
 

@@ -9,6 +9,7 @@ import { stocksRouter } from "./routers/stocks";
 import { tradesRouter } from "./routers/trades";
 import { userRouter } from "./routers/user";
 import { watchListRouter } from "./routers/watchList";
+import redisClient from "./redisClient";
 
 const app = express();
 
@@ -28,5 +29,6 @@ app.use("/trades", tradesRouter);
 app.use("/user", userRouter);
 app.use("/watchList", watchListRouter)
 
-
+// Connect redis client to redis database
+await redisClient.connect();
 app.listen(process.env.PORT);
