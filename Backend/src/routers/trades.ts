@@ -19,6 +19,7 @@ tradesRouter.get('', () => {
 })
 
 // Delete trade
-tradesRouter.delete('/:stock-ticker', (req, res) => {
+// Pass id's of trades as query params
+tradesRouter.delete('/', (req, res) => {
     
 })
