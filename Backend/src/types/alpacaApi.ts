@@ -28,3 +28,10 @@ export type AlpacaSnapshot = {
     dailyBar?: AlpacaBar;       // today's bar (yesterday's before the open)
     prevDailyBar?: AlpacaBar;   // the bar before dailyBar
 };
+
+export type AlpacaHistoricalBar = {
+    // Start time of the bar in ISO string format
+    t: string,
+    // Closing price for the period
+    c: number
+}
