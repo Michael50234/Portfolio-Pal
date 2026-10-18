@@ -7,5 +7,19 @@ export const searchStockQueryParams = z.object({
 });
 
 export const getStockSnapshotsQueryParams = z.object({
-    tickers: z.array(z.string().min(1))
+    // Accepts ?tickers=AAPL,MSFT and ?tickers=AAPL&tickers=MSFT
+    tickers: z.union([z.string(), z.array(z.string())])
+        .transform(v =>
+            (Array.isArray(v) ? v : [v])
+                .flatMap(s => s.split(","))
+                .map(t => t.trim().toUpperCase())
+                .filter(Boolean)
+        )
+        .refine(arr => arr.length > 0)
 }).strict()
+
+export const getStockGraphQueryParams = z.object({
+    period: z.enum(["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "All"])
+})
+
+export const ticker = z.string().transform((t) => t.trim().toUpperCase())
