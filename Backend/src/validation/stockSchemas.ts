@@ -1,12 +1,12 @@
 import z from "zod"
 
-export const searchStockQueryParams = z.object({
+export const searchStockQuerySchema = z.object({
     searchText: z.string().trim().toLowerCase(), 
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(10),
 });
 
-export const getStockSnapshotsQueryParams = z.object({
+export const getStockSnapshotsQuerySchema = z.object({
     // Accepts ?tickers=AAPL,MSFT and ?tickers=AAPL&tickers=MSFT
     tickers: z.union([z.string(), z.array(z.string())])
         .transform(v =>
@@ -18,8 +18,8 @@ export const getStockSnapshotsQueryParams = z.object({
         .refine(arr => arr.length > 0)
 }).strict()
 
-export const getStockGraphQueryParams = z.object({
-    period: z.enum(["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "All"])
+export const getStockGraphQuerySchema = z.object({
+    timePeriod: z.enum(["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "All"])
 })
 
-export const ticker = z.string().transform((t) => t.trim().toUpperCase())
+export const tickerSchema = z.string().transform((t) => t.trim().toUpperCase())

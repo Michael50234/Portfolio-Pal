@@ -25,15 +25,21 @@ export type StockSnapshot = {
 
 export type TopMovers = {
     gainers: {
-        change: Number,
-        percent_change: Number,
-        price: Number, 
-        symbol: String,
+        change: number,
+        percent_change: number,
+        price: number, 
+        symbol: string,
     }[],
     losers: {
-        change: Number,
-        percent_change: Number,
-        price: Number, 
-        symbol: String,
+        change: number,
+        percent_change: number,
+        price: number, 
+        symbol: string,
     }[]
+}
+
+export type HistoricalBar = {
+    // In ISO string format
+    time: string,
+    price: number
 }

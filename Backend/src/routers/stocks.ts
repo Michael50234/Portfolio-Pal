@@ -3,17 +3,17 @@ import express from "express"
 
 import redisClient from "../redisClient";
 import sendError from "../utilities/error";
-import type { StockListItem, StockSnapshot, TopMovers } from "../types/stocks";
-import { getStockGraphQueryParams, getStockSnapshotsQueryParams, searchStockQueryParams, ticker } from "../validation/stockSchemas";
-import { getStockList, scoreMatch } from "../utilities/stocks";
-import type { AlpacaSnapshot } from "../types/alpacaApi";
+import type { HistoricalBar, StockListItem, StockSnapshot, TopMovers } from "../types/stocks";
+import { getStockGraphQuerySchema, getStockSnapshotsQuerySchema, searchStockQuerySchema, tickerSchema } from "../validation/stockSchemas";
+import { getStockGraphParams, getStockList, scoreMatch } from "../utilities/stocks";
+import type { AlpacaHistoricalBar, AlpacaSnapshot } from "../types/alpacaApi";
 
 export const stocksRouter = express.Router();
 
 // Returns the name and ticker of matching stocks
 // Takes page, limit, and search text
 stocksRouter.get('/', async (req, res) => {
-    const parsed = searchStockQueryParams.safeParse(req.query);
+    const parsed = searchStockQuerySchema.safeParse(req.query);
 
     if(!parsed.success) {
         return sendError(400, "Bad request", res);
@@ -53,31 +53,44 @@ stocksRouter.get('/', async (req, res) => {
 // Returns the full details of a stock or a list of stocks
 // Takes a list of tickers in query params
 stocksRouter.get('/snapshots', async (req, res) => {
-    const parsed = getStockSnapshotsQueryParams.safeParse(req.query);
+    const parsed = getStockSnapshotsQuerySchema.safeParse(req.query);
     if(!parsed.success) {
         return sendError(400, "Bad request", res);
     }
 
     const tickers = parsed.data.tickers;
-    const toFetch = [];
+    const toFetch: string[] = [];
     let alpacaSnapshots: Record<string, AlpacaSnapshot> = {};
 
     try {
+        // Get stock list
+        const stockList = await getStockList();
+
+        // Reject the request if any ticker isn't a known stock
+        const knownTickers = new Set(stockList.map((stock) => stock.ticker));
+        const unknownTickers = tickers.filter((ticker) => !knownTickers.has(ticker));
+
+        if(unknownTickers.length > 0) {
+            return sendError(400, `Unknown tickers: ${unknownTickers.join(", ")}`, res);
+        }
+
         // Take data from cache if available, otherwise fetch
-        for (const ticker of tickers) {
-            let stock: string | null = null;
-            try {
-                stock = await redisClient.get(`snapshot:${ticker}`);
-            } catch (err) {
-                console.log(`Failed to read snapshot:${ticker} from cache`, err);
-            }
+        let cached: (string | null)[] = tickers.map(() => null);
+        try {
+            cached = await redisClient.mGet(tickers.map((ticker) => `snapshot:${ticker}`));
+        } catch (err) {
+            console.log("Failed to read snapshots from cache", err);
+        }
+
+        tickers.forEach((ticker, i) => {
+            const stock = cached[i];
 
             if(!stock) {
                 toFetch.push(ticker);
             } else {
                 alpacaSnapshots[ticker] = JSON.parse(stock);
             }
-        }
+        });
 
         let data: Record<string, AlpacaSnapshot> = {};
         if(toFetch.length > 0) {
@@ -116,25 +129,18 @@ stocksRouter.get('/snapshots', async (req, res) => {
             ...data
         }
 
-        // Get stock list
-        let stockList = await getStockList();
-
         const stockDetailsList: Record<string, StockSnapshot> = {}
+        const namesByTicker = new Map(stockList.map((stock) => [stock.ticker, stock.name]));
 
         for (const key in alpacaSnapshots) {
-            let name = "";
+            const name = namesByTicker.get(key) ?? "";
 
-            for (const stock of stockList) {
-                if(stock.ticker == key) {
-                    name = stock.name;
-                }
-            }
-            
             let change = null;
             let changePct = null;
             if (alpacaSnapshots[key]?.prevDailyBar?.c && alpacaSnapshots[key]?.latestTrade?.p) {
-                change = alpacaSnapshots[key].latestTrade.p - alpacaSnapshots[key].prevDailyBar.c;
-                changePct = Math.round(change / alpacaSnapshots[key].prevDailyBar.c * 100);
+                const rawChange = alpacaSnapshots[key].latestTrade.p - alpacaSnapshots[key].prevDailyBar.c;
+                change = Math.round(rawChange * 100) / 100;
+                changePct = Math.round(rawChange / alpacaSnapshots[key].prevDailyBar.c * 10000) / 100;
             }
 
             stockDetailsList[key] = {
@@ -197,7 +203,7 @@ stocksRouter.get('/top-movers', async (req, res) => {
             const data = await response.json();
 
             try {
-                await redisClient.setEx("top-movers", 60 * 5, data);
+                await redisClient.setEx("top-movers", 60 * 5, JSON.stringify(data));
             } catch(error) {
                 console.log("Failed to cache top-movers")
             }
@@ -223,9 +229,63 @@ stocksRouter.get('/real-time-data/:ticker', (req, res) => {
 })
 
 // Returns the over time graph for a stock
-stocksRouter.get('/:ticker/graph', (req, res) => {
-    const parsedParams = ticker.safeParse(req.params);
-    const parsedQuery = getStockGraphQueryParams.safeParse(req.query)
+stocksRouter.get('/:ticker/graph', async (req, res) => {
+    const parsedParams = tickerSchema.safeParse(req.params.ticker);
+    const parsedQuery = getStockGraphQuerySchema.safeParse(req.query);
+
+    if(!parsedParams.success || !parsedQuery.success) {
+        return sendError(400, "Bad Request", res);
+    }
+
+    const ticker = parsedParams.data;
+    const { timePeriod } = parsedQuery.data;
+
+    try {
+        const { start, end, timeframe } = await getStockGraphParams(timePeriod);
+
+        const apiURL = new URL("https://data.alpaca.markets/v2/stocks/bars");
+        // Set query params
+        apiURL.searchParams.set("symbols", ticker);
+        apiURL.searchParams.set("timeframe", timeframe);
+        apiURL.searchParams.set("start", start);
+        apiURL.searchParams.set("end", end);
+        apiURL.searchParams.set("limit", "10000");
+        apiURL.searchParams.set("adjustment", "raw");
+        apiURL.searchParams.set("feed", "sip");
+        apiURL.searchParams.set("currency", "CAD");
+
+        const response = await fetch(apiURL.toString(), {
+            method: "GET",
+            headers: {
+                'APCA-API-KEY-ID': process.env.ALPACA_API_KEY!,
+                'APCA-API-SECRET-KEY': process.env.ALPACA_API_SECRET_KEY!,
+            },
+        });
+
+        if(!response.ok) {
+            throw new Error("Failed to fetch graph data");
+        }
+
+        const data = await response.json();
+        const alpacaBars: AlpacaHistoricalBar[] | undefined = data?.bars?.[ticker];
+
+        if(!alpacaBars) {
+            return sendError(404, "No data found for ticker", res);
+        }
+
+        const bars: HistoricalBar[] = alpacaBars.map((alpacaBar) => {
+            return {
+                time: alpacaBar.t,
+                price: alpacaBar.c
+            }
+        })
+
+        return res.status(200).json(bars)
+    } catch {
+        console.log("Failed to fetch graph data");
+        return sendError(500, "Internal server error", res);
+    }
+
 })
 
 

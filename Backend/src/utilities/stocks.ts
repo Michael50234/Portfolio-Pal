@@ -85,10 +85,10 @@ const getUSMarketOpenDays = async (daysToGet: number) => {
     const start = new Date();
     const end = new Date();
 
-    end.setDate(end.getDate() - 14);
+    start.setDate(start.getDate() - 14);
 
     try {
-        const response = await fetch(`https://paper-api.alpaca.markets/v2/calendar?date_type=TRADING&start=${start.toISOString()}&end=${end.toISOString()}`, {
+        const response = await fetch(`https://api.alpaca.markets/v2/calendar?date_type=TRADING&start=${start.toISOString()}&end=${end.toISOString()}`, {
             method: 'GET',
             headers: {
                 'APCA-API-KEY-ID': process.env.ALPACA_API_KEY!,
@@ -105,7 +105,7 @@ const getUSMarketOpenDays = async (daysToGet: number) => {
         return data.slice(-daysToGet)
     } catch {
         console.log("Failed to get market open days")
-        throw new Error("Failed to get market open dats")
+        throw new Error("Failed to get market open days")
     }
 }
 
@@ -113,7 +113,11 @@ const getUSMarketOpenDays = async (daysToGet: number) => {
 const getOpenDayStart = async (daysToGet: number): Promise<string> => {
     const openDays = await getUSMarketOpenDays(daysToGet);
     const date = openDays[0]?.date;
-    if (!date) throw new Error("No market open days found");
+
+    if (!date) {
+        console.log("No market open days found")
+        throw new Error("No market open days found");
+    }
     return date;
 }
 
