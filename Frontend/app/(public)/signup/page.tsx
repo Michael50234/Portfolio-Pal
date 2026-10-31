@@ -29,9 +29,8 @@ const page = () => {
         const errorObject: ApiError = await response.json();
         throw new Error(errorObject.message)
       }
-
-      console.log("Created an account")
-      router.replace("/home")
+      
+      router.replace("/dashboard")
     } catch(error) {
       if(error instanceof Error) {
         console.error(error.message);

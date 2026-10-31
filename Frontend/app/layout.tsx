@@ -2,8 +2,11 @@ import "dotenv/config";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import '@fontsource-variable/dm-sans';
+
 import "./globals.css";
 import Provider from "@/components/Provider";
+import SearchBar from "@/components/NavBar";
+import { Toolbar } from "@mui/material";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <Provider>
         <body className="min-h-full flex flex-col" style={{
           backgroundColor: "var(--paper)"
-        }}>{children}</body>
+        }}>
+          {children}
+        </body>
       </Provider>
     </html>
   );

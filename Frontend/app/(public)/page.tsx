@@ -30,8 +30,7 @@ const page = () => {
         throw new Error(errorObject.message)
       }
 
-      console.log("Logged in")
-      router.replace("/home")
+      router.replace("/dashboard")
     } catch(error) {
       if(error instanceof Error) {
         console.error(error.message);
@@ -40,7 +39,6 @@ const page = () => {
       }
     }
   };
-
 
   return (
     <Box sx={{
