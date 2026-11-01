@@ -1,47 +1,70 @@
 'use client';
 
 import { Autocomplete, Avatar, Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material'
-import { ErrorBoundary } from 'next/dist/client/components/error-boundary';
-import React, { useState } from 'react'
+import ClearIcon from '@mui/icons-material/Clear'
+import React, { useEffect, useState } from 'react'
+import { useShallow } from "zustand/react/shallow";
 
-export const stocks = [
-  { ticker: 'AAPL', name: 'Apple Inc.' },
-  { ticker: 'MSFT', name: 'Microsoft Corporation' },
-  { ticker: 'GOOGL', name: 'Alphabet Inc. Class A' },
-  { ticker: 'AMZN', name: 'Amazon.com, Inc.' },
-  { ticker: 'NVDA', name: 'NVIDIA Corporation' },
-  { ticker: 'META', name: 'Meta Platforms, Inc.' },
-  { ticker: 'TSLA', name: 'Tesla, Inc.' },
-  { ticker: 'BRK.B', name: 'Berkshire Hathaway Inc. Class B' },
-  { ticker: 'JPM', name: 'JPMorgan Chase & Co.' },
-  { ticker: 'V', name: 'Visa Inc.' },
-  { ticker: 'MA', name: 'Mastercard Incorporated' },
-  { ticker: 'JNJ', name: 'Johnson & Johnson' },
-  { ticker: 'WMT', name: 'Walmart Inc.' },
-  { ticker: 'PG', name: 'The Procter & Gamble Company' },
-  { ticker: 'XOM', name: 'Exxon Mobil Corporation' },
-  { ticker: 'HD', name: 'The Home Depot, Inc.' },
-  { ticker: 'KO', name: 'The Coca-Cola Company' },
-  { ticker: 'PEP', name: 'PepsiCo, Inc.' },
-  { ticker: 'DIS', name: 'The Walt Disney Company' },
-  { ticker: 'NFLX', name: 'Netflix, Inc.' },
-  { ticker: 'AMD', name: 'Advanced Micro Devices, Inc.' },
-  { ticker: 'INTC', name: 'Intel Corporation' },
-  { ticker: 'ORCL', name: 'Oracle Corporation' },
-  { ticker: 'CRM', name: 'Salesforce, Inc.' },
-  { ticker: 'NKE', name: 'NIKE, Inc.' },
-  { ticker: 'MCD', name: "McDonald's Corporation" },
-  { ticker: 'BA', name: 'The Boeing Company' },
-  { ticker: 'SPY', name: 'SPDR S&P 500 ETF Trust' },
-  { ticker: 'QQQ', name: 'Invesco QQQ Trust' },
-  { ticker: 'VTI', name: 'Vanguard Total Stock Market ETF' },
-]
+import { useSearchTextStore } from '@/stores/searchStore';
+import { useQuery } from '@tanstack/react-query';
+
+type StockAsset = {
+    ticker: string,
+    name: string
+};
+
+const getStockAssets = async (searchText: string): Promise<StockAsset[]> => {
+    const apiURL = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/stocks`);
+    apiURL.searchParams.set("searchText", searchText);
+    apiURL.searchParams.set("page", "1");
+    apiURL.searchParams.set("limit", "10");
+    const response = await fetch(apiURL.toString(), {
+        method: "GET",
+        credentials: "include"
+    });
+
+    if(!response.ok) {
+        throw new Error("Failed to fetch stock assets");
+    }
+
+    const body: { stocks: StockAsset[] } = await response.json();
+    return body.stocks;
+}
 
 const SearchBar = () => {
+    const { searchText, setText } = useSearchTextStore(useShallow((state) => ({
+        searchText: state.searchText,
+        setText: state.setText
+    })));
+
+    const [debounced, setDebounced] = useState("");
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebounced(searchText), 300);
+        return () => clearTimeout(timer);
+    }, [searchText])
+
+
+    // Set stale and gcTime to same as backend redis cache
+    const { data } = useQuery({
+        queryKey: ["stockAssets", debounced],
+        queryFn: () => getStockAssets(debounced),
+        staleTime: 1000 * 60 * 60 * 24,
+        gcTime: 1000 * 60 * 60 * 24
+    });
+
+
+    const stocks = data ?? [];
 
     return (
         <React.Fragment>
             <Autocomplete 
+                inputValue={searchText}
+                onInputChange={(_, newValue, reason) => {
+                    if (reason === "reset") return;
+                    setText(newValue);
+                }}
+                clearOnBlur={false}
                 sx={{ ml: "auto", mr: "auto", minWidth: "300px" }}
                 size="small"
                 forcePopupIcon={false}
@@ -49,9 +72,6 @@ const SearchBar = () => {
                 getOptionLabel={(option) => `${option.name} - ${option.ticker}`}
                 getOptionKey={(option) => option.ticker}
                 slotProps={{
-                    clearIndicator: {
-                        sx: { visibility: "visible" },
-                    },
                     paper: {
                         sx: {
                             mt: "6px",
@@ -81,6 +101,22 @@ const SearchBar = () => {
                     <TextField
                         {...params}
                         placeholder="Search stocks"
+                        slotProps={{
+                            ...params.slotProps,
+                            input: {
+                                ...params.slotProps.input,
+                                endAdornment: searchText ? (
+                                    <IconButton
+                                        size="small"
+                                        edge="end"
+                                        aria-label="Clear search"
+                                        onClick={() => setText("")}
+                                    >
+                                        <ClearIcon fontSize="small" />
+                                    </IconButton>
+                                ) : null,
+                            },
+                        }}
                         sx={{
                             "& .MuiOutlinedInput-root": {
                                 borderRadius: "999px",

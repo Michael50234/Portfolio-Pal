@@ -2,10 +2,12 @@
 
 import { AppBar, Avatar, Box, Button, IconButton, Menu, MenuItem, Toolbar, Typography } from '@mui/material'
 import React, { useState } from 'react'
+
 import SearchBar from './SearchBar';
 
 const NavBar = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
 
   return (
     <AppBar
