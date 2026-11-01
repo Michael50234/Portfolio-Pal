@@ -12,6 +12,68 @@ const theme = createTheme({
                 }
             }
         },
+        MuiButton: {
+            defaultProps: {
+                disableElevation: true,
+                disableRipple: true,
+            },
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    padding: "6px 16px",
+                    lineHeight: 1.5,
+                    transition: "background-color 150ms ease-out, border-color 150ms ease-out",
+                    "&.Mui-focusVisible": {
+                        outline: "2px solid var(--accent)",
+                        outlineOffset: 2,
+                    },
+                    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+                },
+
+                // Primary: filled accent
+                contained: {
+                    backgroundColor: "var(--accent)",
+                    color: "var(--text)",
+                    "&:hover": {
+                        backgroundColor: "hsl(36, 51%, 54%)",
+                    },
+                    "&.Mui-disabled": {
+                        backgroundColor: "var(--surface-sunken)",
+                        color: "var(--text-muted)",
+                    },
+                },
+
+                // Secondary: outlined
+                outlined: {
+                    backgroundColor: "transparent",
+                    color: "var(--text)",
+                    border: "1px solid var(--border-strong)",
+                    "&:hover": {
+                        backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                        borderColor: "var(--accent)",
+                    },
+                    "&.Mui-disabled": {
+                        borderColor: "var(--border)",
+                        color: "var(--text-muted)",
+                    },
+                },
+
+                // Tertiary: text only
+                text: {
+                    color: "var(--text-muted)",
+                    "&:hover": {
+                        backgroundColor: "var(--surface-sunken)",
+                        color: "var(--text)",
+                    },
+                    "&.Mui-disabled": {
+                        color: "var(--text-muted)",
+                        opacity: 0.5,
+                    },
+                },
+            },
+        },
         MuiOutlinedInput: {
             styleOverrides: {
                 root: {

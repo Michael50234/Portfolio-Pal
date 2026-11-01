@@ -5,7 +5,8 @@
   --text: hsl(193, 26%, 14%);
   --text-muted: hsl(192, 7%, 29%);
   --accent: hsl(36, 51%, 48%);
-  --gains: hsl(143, 28%, 33%);
+  --gains: hsl(143, 35%, 36%);
+  --gains-bright: hsl(143, 45%, 40%);
   --losses: hsl(7, 45%, 44%);
   --border: hsl(47, 19%, 82%);
   --border-strong: hsl(47, 19%, 70%);

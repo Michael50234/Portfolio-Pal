@@ -7,6 +7,7 @@ import { useShallow } from "zustand/react/shallow";
 
 import { useSearchTextStore } from '@/stores/searchStore';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 type StockAsset = {
     ticker: string,
@@ -32,6 +33,8 @@ const getStockAssets = async (searchText: string): Promise<StockAsset[]> => {
 }
 
 const SearchBar = () => {
+    const router = useRouter();
+
     const { searchText, setText } = useSearchTextStore(useShallow((state) => ({
         searchText: state.searchText,
         setText: state.setText
@@ -59,13 +62,24 @@ const SearchBar = () => {
     return (
         <React.Fragment>
             <Autocomplete 
+                filterOptions={(options) => options}
+                value={null}
                 inputValue={searchText}
                 onInputChange={(_, newValue, reason) => {
                     if (reason === "reset") return;
                     setText(newValue);
                 }}
+                onChange={(_, stock) => {
+                    console.log("")
+                    if(!stock) {
+                        return;
+                    }
+
+                    router.push(`/stock/${stock?.ticker}`);
+                
+                }}
                 clearOnBlur={false}
-                sx={{ ml: "auto", mr: "auto", minWidth: "300px" }}
+                sx={{ ml: "10px", mr: "auto", minWidth: "300px" }}
                 size="small"
                 forcePopupIcon={false}
                 options={stocks}

@@ -1,6 +1,6 @@
 import React from 'react'
 
-const SignupButton = () => {
+const page = () => {
   return (
     <div>
       
@@ -8,4 +8,4 @@ const SignupButton = () => {
   )
 }
 
-export default SignupButton
+export default page
