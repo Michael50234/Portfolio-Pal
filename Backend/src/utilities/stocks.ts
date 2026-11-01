@@ -1,7 +1,6 @@
 import redisClient from "../redisClient";
 import type { AlpacaAsset } from "../types/alpacaApi";
 import type { StockListItem } from "../types/stocks";
-import sendError from "./error";
 
 // Extract ticker and company name from stockList items
 export const createSlimList = (stockList: AlpacaAsset[]): StockListItem[] => {
@@ -38,7 +37,7 @@ export const getStockList = async (): Promise<StockListItem[]> => {
     }
 
     if(!stockListJSON) {
-        const response = await fetch("https://api.alpaca.markets/v2/assets?status=active&asset_class=us_equity", {
+        const response = await fetch("https://paper-api.alpaca.markets/v2/assets?status=active&asset_class=us_equity", {
             method: "GET",
             headers: {
                 "APCA-API-KEY-ID": process.env.ALPACA_API_KEY!,
@@ -88,7 +87,7 @@ const getUSMarketOpenDays = async (daysToGet: number) => {
     start.setDate(start.getDate() - 14);
 
     try {
-        const response = await fetch(`https://api.alpaca.markets/v2/calendar?date_type=TRADING&start=${start.toISOString()}&end=${end.toISOString()}`, {
+        const response = await fetch(`https://paper-api.alpaca.markets/v2/calendar?date_type=TRADING&start=${start.toISOString()}&end=${end.toISOString()}`, {
             method: 'GET',
             headers: {
                 'APCA-API-KEY-ID': process.env.ALPACA_API_KEY!,

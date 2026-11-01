@@ -288,6 +288,11 @@ stocksRouter.get('/:ticker/graph', async (req, res) => {
 
 })
 
+// Get data on whether market is open or not
+stocksRouter.get('/market-status', (req, res) => {
+
+})
+
 
 
 
